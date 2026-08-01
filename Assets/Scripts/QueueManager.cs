@@ -27,6 +27,8 @@ public class QueueManager : MonoBehaviour
     [SerializeField] float watchLerp;
     [SerializeField] CurveFollowData npcFollowData;
     [SerializeField] CurveFollowData paperFollowData;
+    [SerializeField] float npc_wobble_speed = 5;
+    [SerializeField] float npc_wobble_amplitude = .3f;
     [SerializeField] Curve leaveCurve;
     [Header("Auto Spawner")]
     [SerializeField] Vector2 _timerMinMax;
@@ -77,6 +79,8 @@ public class QueueManager : MonoBehaviour
         }
 
         CurveFollower curveFollower = new(npcFollowData, instance.transform);
+        WobbleCurveFollow wobble = new(curveFollower, npc_wobble_speed, npc_wobble_amplitude);
+
         curveFollower.LastPoint = npcFollowData.path.points.Count - _npcInstances.Count;
         curveFollower.OnFinishedWalking += () => {
             if(_npcInstances.Count > 1)
@@ -151,9 +155,11 @@ public class QueueManager : MonoBehaviour
         }
 
         CurveFollower toWatchFollow = new (paperFollowData, npc.PaperObject);
+        //WobbleCurveFollow wobble = new(toWatchFollow); 
         StartCoroutine(toWatchFollow.WalkLoop(watchSpot, watchLerp));
         paperAS.Play();
         toWatchFollow.OnFinishedWalking += () => {
+            toWatchFollow.RemoveSubscriptions();
             
             npc.PaperObject.SetParent(watchSpot);
 
@@ -161,7 +167,6 @@ public class QueueManager : MonoBehaviour
             if (!isGameOverNPC && npc.gameObject.name != gameWinNpc.gameObject.name + "(Clone)")
                 npc.PaperModel.gameObject.layer = LayerMask.NameToLayer("NonPixelated");
 
-            toWatchFollow.RemoveSubscriptions();
             if (_walkOut)
             {
                 if(!isGameOverNPC)
@@ -241,6 +246,7 @@ public class QueueManager : MonoBehaviour
         CurveFollowData copy = npcFollowData;
         copy.path = leaveCurve;
         CurveFollower backFollow = new(copy, instance.transform);
+        WobbleCurveFollow wobble = new(backFollow, npc_wobble_speed, npc_wobble_amplitude);
         instance.StopAllCoroutines();
         instance.StartCoroutine(backFollow.WalkLoop());
         backFollow.OnFinishedWalking += () => {

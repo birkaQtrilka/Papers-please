@@ -8,6 +8,7 @@ public class CurveFollower
     public Transform walker;
 
     public event Action OnFinishedWalking;
+    public event Action OnWalk;
 
     public float NextNodeActivationDistance = .5f;
     public float LastNodeActivationDistance = .5f;
@@ -139,6 +140,7 @@ public class CurveFollower
     public void RemoveSubscriptions()
     {
         OnFinishedWalking = null;
+        OnWalk = null;
     }
 
     public IEnumerator WalkLoop(Transform finalPosition = null, float finalPositionTime = 0)
@@ -147,6 +149,7 @@ public class CurveFollower
         while (_move)
         {
             MoveBody();
+            OnWalk?.Invoke();
             yield return null;
         }
 
