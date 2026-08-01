@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.steph.unity.curve": {
+      "version": "https://github.com/birkaQtrilka/StephLibrary.git?path=/Unity/Curve",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "56e953fbd9223f98ba6a320a0b7a90eb31f3b119"
+    },
     "com.unity.ai.navigation": {
       "version": "2.0.7",
       "depth": 0,

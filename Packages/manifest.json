@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.steph.unity.curve": "https://github.com/birkaQtrilka/StephLibrary.git?path=/Unity/Curve",
     "com.unity.ai.navigation": "2.0.7",
     "com.unity.collab-proxy": "2.12.4",
     "com.unity.ide.rider": "3.0.36",

@@ -3211,6 +3211,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4514600241968319970, guid: 5da38674b9c23c5459b34d8ef644e61b, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.b
+      value: 0.11372549
+      objectReference: {fileID: 0}
+    - target: {fileID: 4514600241968319970, guid: 5da38674b9c23c5459b34d8ef644e61b, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.g
+      value: 0.1728554
+      objectReference: {fileID: 0}
+    - target: {fileID: 4514600241968319970, guid: 5da38674b9c23c5459b34d8ef644e61b, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.r
+      value: 0.5529412
+      objectReference: {fileID: 0}
     - target: {fileID: 5506172714963328184, guid: 5da38674b9c23c5459b34d8ef644e61b, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.387
@@ -3251,6 +3263,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6608355356681407001, guid: 5da38674b9c23c5459b34d8ef644e61b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.015
+      objectReference: {fileID: 0}
+    - target: {fileID: 8253399689628275768, guid: 5da38674b9c23c5459b34d8ef644e61b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.015
+      objectReference: {fileID: 0}
     - target: {fileID: 8351817069022599786, guid: 5da38674b9c23c5459b34d8ef644e61b, type: 3}
       propertyPath: m_Name
       value: Stamp
@@ -3260,11 +3280,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5da38674b9c23c5459b34d8ef644e61b, type: 3}
---- !u!4 &873091493 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5506172714963328184, guid: 5da38674b9c23c5459b34d8ef644e61b, type: 3}
+--- !u!114 &873091494 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2176584041633337809, guid: 5da38674b9c23c5459b34d8ef644e61b, type: 3}
   m_PrefabInstance: {fileID: 873091492}
   m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1049cbf85ebbbb458e0ed778003cb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &886507131
 GameObject:
   m_ObjectHideFlags: 0
@@ -6829,7 +6855,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   scoreUI: {fileID: 514623735}
   toStampPaperPosition: {fileID: 315883457}
-  stamper: {fileID: 873091493}
+  stamper: {fileID: 873091494}
   raisedPosition: {fileID: 787286921}
   approveInk: {fileID: 1199216336}
   disapproveInk: {fileID: 700669609}
@@ -7425,6 +7451,18 @@ PrefabInstance:
     - target: {fileID: 8442937806575271577, guid: b6ebc17c689c414469f9f3e8c486faa2, type: 3}
       propertyPath: m_LocalPosition.y
       value: -10.7959
+      objectReference: {fileID: 0}
+    - target: {fileID: 9173937639857811042, guid: b6ebc17c689c414469f9f3e8c486faa2, type: 3}
+      propertyPath: m_Size.z
+      value: 1.8830903
+      objectReference: {fileID: 0}
+    - target: {fileID: 9173937639857811042, guid: b6ebc17c689c414469f9f3e8c486faa2, type: 3}
+      propertyPath: m_Center.y
+      value: -0.39873743
+      objectReference: {fileID: 0}
+    - target: {fileID: 9173937639857811042, guid: b6ebc17c689c414469f9f3e8c486faa2, type: 3}
+      propertyPath: m_Center.z
+      value: -0.05972135
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

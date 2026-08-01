@@ -19,7 +19,7 @@ public class StampManager : MonoBehaviour
 
     [SerializeField] Transform toStampPaperPosition;
 
-    [SerializeField] Transform stamper;
+    [SerializeField] Stamper stamper;
     [SerializeField] Transform raisedPosition;
     [SerializeField] Transform approveInk;
     [SerializeField] Transform disapproveInk;
@@ -45,6 +45,7 @@ public class StampManager : MonoBehaviour
     [SerializeField] AudioSource paperAS;
     [SerializeField] AudioSource wrongAS;
     [SerializeField] AudioSource correctAS;
+
     public int Score = 0;
     
 
@@ -85,16 +86,18 @@ public class StampManager : MonoBehaviour
         DeactivateApproveColliders(docObject);
 
         paperFollowData.path = stampToPaperPath;
-        CurveFollower paperDeskFollower = new (paperFollowData, stamper);
+        CurveFollower paperDeskFollower = new (paperFollowData, stamper.transform);
         yield return StartCoroutine(paperDeskFollower.LerpToTransform(raisedPosition, inkRaiseTime));
 
         Transform inkToActivate = approved ? approveInk : disapproveInk;
         yield return StartCoroutine(paperDeskFollower.LerpToTransform(inkToActivate, inkPressTime));
 
+        stamper.PlayStampEffect(approved);
+
         InkPressed?.Invoke();
 
         Transform stampPaperPosition = approved ? docObject.Find("Approve") : docObject.Find("Disapprove");
-        CurveFollower stampFollower = new(paperFollowData2, stamper, stampToPaperPath);
+        CurveFollower stampFollower = new(paperFollowData2, stamper.transform, stampToPaperPath);
 
         yield return StartCoroutine(stampFollower.WalkLoop(stampPaperPosition, stampTime));
 
@@ -117,6 +120,7 @@ public class StampManager : MonoBehaviour
         scoreUI.UpdateScore(Score);
         var inkRenderer = stampPaperPosition.Find("Stamp");
         inkRenderer.gameObject.SetActive(true);
+        stamper.PlayStampEffect(approved);
 
 
         InkStamped?.Invoke();
@@ -144,7 +148,7 @@ public class StampManager : MonoBehaviour
     // custom property drawer that holds scriptable object reference
     IEnumerator AfterStamp(Transform backSpot)
     {
-        CurveFollower stampBack = new(d3, stamper, paperToStampPath, false);
+        CurveFollower stampBack = new(d3, stamper.transform, paperToStampPath, false);
         yield return StartCoroutine(stampBack.LerpToTransform(stampedRaisedPosition, stampRaiseTime));
         yield return new WaitForSeconds(stampRaiseHoldTime);
         yield return StartCoroutine(stampBack.WalkLoop(backSpot, finalpositionLerpTime));
