@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using System;
+using UnityEngine.Events;
 
 
 public class SceneTransitionManager : MonoBehaviour
@@ -36,6 +37,8 @@ public class SceneTransitionManager : MonoBehaviour
     private Vignette _vignette;
     private bool _isTransitioning = false;
 
+    public UnityEvent OnEnd;
+
     void Start()
     {
         if (globalVolume != null)
@@ -48,7 +51,7 @@ public class SceneTransitionManager : MonoBehaviour
             }
         }
 
-        if (fadeOnStart) FadeOut();
+        if (fadeOnStart) FadeOut(() => OnEnd?.Invoke());
     }
 
 
@@ -164,6 +167,7 @@ public class SceneTransitionManager : MonoBehaviour
         // Snap to exact target values.
         SetCanvasAlpha(uiEnd);
         SetVignetteIntensity(vignetteEnd);
+
     }
 
 
