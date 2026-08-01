@@ -5,16 +5,30 @@ using UnityEngine.UI;
 
 public class StartMenuManager : MonoBehaviour
 {
-    [SerializeField] Button startButton;
+    [SerializeField] SelectManager startButton;
     [SerializeField] SceneTransitionManager sceneTransitionManager;
-    private void Start()
+    private void OnEnable()
     {
-        startButton.onClick.AddListener(OnStartButtonClicked);
+        startButton.OnFieldClick.AddListener(OnStartButtonClicked);
+    }
+    private void OnDisable()
+    {
+        startButton.OnFieldClick.RemoveListener(OnStartButtonClicked);
     }
 
-    private void OnStartButtonClicked()
+    private void OnStartButtonClicked(Collider col)
     {
-        sceneTransitionManager.FadeIn(() =>SceneManager.LoadScene(1));
+        switch (col.gameObject.name)
+        {
+            case "Start":
+                sceneTransitionManager.FadeIn(() => SceneManager.LoadScene(1));
+                break;
+            case "Quit":
+                Application.Quit();
+                break;
+            default:
+                break;
+        }
     }
 
 }
