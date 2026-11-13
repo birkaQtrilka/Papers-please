@@ -127,9 +127,14 @@ public class StampManager : MonoBehaviour
         StartCoroutine(AfterStamp(inkToActivate));
         yield return new WaitForSeconds(paperHoldTime);
         CurveFollower deskToFolder = new (paperFollowData, docObject, deskToFolderPath);
+        
         paperAS.Play();
         yield return StartCoroutine(deskToFolder.WalkLoop(folderSpot, finalpositionLerpTime));
-        
+        var rb = docObject.GetComponentInChildren<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+        }
         DestroyLastPaper(docObject.gameObject);
 
         StampFinished.Invoke();
