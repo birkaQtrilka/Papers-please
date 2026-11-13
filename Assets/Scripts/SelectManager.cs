@@ -7,26 +7,29 @@ public class SelectManager : MonoBehaviour
     [SerializeField] Camera renderCamera;
     [SerializeField] LayerMask _paperLayer;
     [SerializeField] AudioSource selectSound;
-
+    [SerializeField] bool enableDisableSelection = true;
     [SerializeField] RectTransform renderImageRect;
 
     GameObject _lastSelection;
 
     public UnityEvent<Collider> OnFieldClick;
+    public UnityEvent<GameObject> OnFieldEnter;
+    public UnityEvent<GameObject> OnFieldExit;
 
     void Update()
     {
         Ray ray = GetWorldRay();
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, _paperLayer))
         {
-            if (_lastSelection != null) _lastSelection.SetActive(false);
+            if (_lastSelection != null && enableDisableSelection) _lastSelection.SetActive(false);
             var copy = _lastSelection;
             _lastSelection = hit.collider.transform.GetChild(0).gameObject;
-            _lastSelection.SetActive(true);
+            if(enableDisableSelection) _lastSelection.SetActive(true);
 
             if (copy != _lastSelection)
             {
-                selectSound.Play();
+                if(selectSound != null) selectSound.Play();
+                OnFieldEnter?.Invoke(_lastSelection);
             }
 
             if (Input.GetMouseButtonDown(0))
@@ -40,7 +43,8 @@ public class SelectManager : MonoBehaviour
         {
             if (_lastSelection != null)
             {
-                _lastSelection.SetActive(false);
+                if (enableDisableSelection) _lastSelection.SetActive(false);
+                OnFieldExit?.Invoke(_lastSelection);
                 _lastSelection = null;
             }
         }
