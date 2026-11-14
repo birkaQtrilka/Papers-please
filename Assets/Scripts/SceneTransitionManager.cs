@@ -9,6 +9,16 @@ using UnityEngine.Events;
 
 public class SceneTransitionManager : MonoBehaviour
 {
+    [Header("Solid Vignette Overlay")]
+    [Tooltip("Draw the vignette as a UI gradient so the color is fully opaque (URP's vignette only multiplies the scene).")]
+    public bool useSolidOverlay = true;
+
+    [Tooltip("Full-screen stretched Image on a canvas rendered above everything. Raycast Target off.")]
+    public Image overlayImage;
+
+    [Tooltip("Where the gradient starts (0 = center, 1 = corners).")]
+    [Range(0f, 0.95f)]
+    public float overlayInnerRadius = 0.4f;
     [Header("References")]
     [Tooltip("CanvasGroup on your main game UI Canvas.")]
     public CanvasGroup uiCanvasGroup;
@@ -46,6 +56,7 @@ public class SceneTransitionManager : MonoBehaviour
 
     void Start()
     {
+        SetupOverlay();
         if (globalVolume != null)
         {
             globalVolume.profile = Instantiate(globalVolume.profile);
@@ -65,6 +76,37 @@ public class SceneTransitionManager : MonoBehaviour
         if (fadeOnStart) FadeOut(() => OnEnd?.Invoke());
     }
 
+    private void SetupOverlay()
+    {
+        if (!useSolidOverlay || overlayImage == null) return;
+
+        const int size = 256;
+        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
+        {
+            wrapMode = TextureWrapMode.Clamp,
+            filterMode = FilterMode.Bilinear
+        };
+
+        var pixels = new Color32[size * size];
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float dx = (x + 0.5f) / size - 0.5f;
+                float dy = (y + 0.5f) / size - 0.5f;
+                float d = Mathf.Sqrt(dx * dx + dy * dy) / 0.7071f; // 1 at the corners
+                float a = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(overlayInnerRadius, 1f, d));
+                pixels[y * size + x] = new Color32(255, 255, 255, (byte)(a * 255f));
+            }
+        }
+        tex.SetPixels32(pixels);
+        tex.Apply();
+
+        overlayImage.sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+        overlayImage.type = Image.Type.Simple;
+        overlayImage.raycastTarget = false;
+        overlayImage.color = new Color(1, 1, 1, 0);
+    }
 
     public void FadeOut(System.Action onMidpoint = null, Color? color = null)
     {
@@ -154,7 +196,13 @@ public class SceneTransitionManager : MonoBehaviour
         Color activeColor = color ?? transitionColor;
         float elapsed = 0f;
 
-        if (_vignette != null)
+        bool overlayActive = useSolidOverlay && overlayImage != null;
+
+        if (overlayActive)
+        {
+            overlayImage.color = new Color(activeColor.r, activeColor.g, activeColor.b, overlayImage.color.a);
+        }
+        else if (_vignette != null)
         {
             _vignette.center.value = new Vector2(0.5f, 0.5f);
             _vignette.intensity.value = vignetteStart;
@@ -193,6 +241,14 @@ public class SceneTransitionManager : MonoBehaviour
 
     private void SetVignetteIntensity(float intensity)
     {
+        if (useSolidOverlay && overlayImage != null)
+        {
+            Color c = overlayImage.color;
+            c.a = Mathf.Clamp01(intensity);
+            overlayImage.color = c;
+            return;
+        }
+
         if (_vignette != null)
             _vignette.intensity.value = intensity;
     }

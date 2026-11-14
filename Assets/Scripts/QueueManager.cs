@@ -45,7 +45,11 @@ public class QueueManager : MonoBehaviour
     readonly List<NPC> _npcInstances = new List<NPC>();
 
     StampData _lastStampData;
-
+    bool _paperReady;
+    bool _pendingPaper;
+    bool _roundEnded;
+    readonly List<UnityAction> _queueAdvanceListeners = new List<UnityAction>();
+    public bool RoundEnded => _roundEnded;
 
     void Start()
     {
@@ -53,6 +57,37 @@ public class QueueManager : MonoBehaviour
         StartCoroutine(StartNpcSpawn(2));
         countdownTimer.TimerCompleted.AddListener(CallOffNPCs);
         stampManager.InkStamped.AddListener(CheckScore);
+        stampManager.StampFinished.AddListener(OnStampFinished);
+    }
+
+    void OnStampFinished()
+    {
+        _pendingPaper = false;
+        if (_roundEnded) return;
+        CheckScore();
+        if (!_roundEnded && documents.Count == 0 && _npcInstances.Count == 0)
+            StartGameWin();
+    }
+
+    void ClearQueueListeners()
+    {
+        foreach (var listener in _queueAdvanceListeners)
+        {
+            stampManager.PaperTrashed.RemoveListener(listener);
+            stampManager.StampFinished.RemoveListener(listener);
+        }
+        _queueAdvanceListeners.Clear();
+    }
+
+    void OnDestroy()
+    {
+        if (countdownTimer != null) countdownTimer.TimerCompleted.RemoveListener(CallOffNPCs);
+        if (stampManager != null)
+        {
+            stampManager.InkStamped.RemoveListener(CheckScore);
+            stampManager.StampFinished.RemoveListener(OnStampFinished);
+            ClearQueueListeners();
+        }
     }
 
     void CheckScore()
@@ -107,6 +142,7 @@ public class QueueManager : MonoBehaviour
 
     NPC SpawnNPC()
     {
+        if (_roundEnded) return null;
         if (documents.Count == 0)
         {
             Debug.LogError("No documents assigned to QueueManager!");
@@ -133,13 +169,15 @@ public class QueueManager : MonoBehaviour
     {
         void self()
         {
-            walker.LastPoint++;
-            npc.StartCoroutine(walker.WalkLoop());
-
             stampManager.PaperTrashed.RemoveListener(self);
             stampManager.StampFinished.RemoveListener(self);
+            _queueAdvanceListeners.Remove(self);
+            if (_roundEnded || npc == null) return;
+            walker.LastPoint++;
+            npc.StartCoroutine(walker.WalkLoop());
         }
 
+        _queueAdvanceListeners.Add(self);
         stampManager.PaperTrashed.AddListener(self);
         stampManager.StampFinished.AddListener(self);
     }
@@ -148,7 +186,8 @@ public class QueueManager : MonoBehaviour
     {
         walker.RemoveSubscriptions();
         bool isGameOverNPC = npc.gameObject.name == gameOverNpc.gameObject.name + "(Clone)";
-        if (_walkOut && !isGameOverNPC)
+        bool isResultNPC = isGameOverNPC || npc.gameObject.name == gameWinNpc.gameObject.name + "(Clone)";
+        if (_roundEnded && !isResultNPC)
         {
             GoToExit(npc);
             return;
@@ -162,27 +201,25 @@ public class QueueManager : MonoBehaviour
             toWatchFollow.RemoveSubscriptions();
             
             npc.PaperObject.SetParent(watchSpot);
-
-            _lastStampData = new StampData(false, npc.DocData, npc.PaperObject, npc.PaperModel.transform);
-            if (!isGameOverNPC && npc.gameObject.name != gameWinNpc.gameObject.name + "(Clone)")
-                npc.PaperModel.gameObject.layer = LayerMask.NameToLayer("NonPixelated");
-
-            if (_walkOut)
+            if (isResultNPC) return;
+            if (_roundEnded)
             {
-                if(!isGameOverNPC)
-                {
-                    stampManager.TrashPaper(_lastStampData);
-
-                }
                 npc.PaperModel.gameObject.layer = LayerMask.NameToLayer("Default");
+                return;
             }
-            
+            _lastStampData = new StampData(false, npc.DocData, npc.PaperObject, npc.PaperModel.transform);
+            npc.PaperModel.gameObject.layer = LayerMask.NameToLayer("NonPixelated");
+            _paperReady = true;
 
         };
     }
 
     public void OnPaperEvaluated(bool approved)
     {
+        if (_roundEnded || !_paperReady || _pendingPaper || stampManager.IsStamping || _npcInstances.Count == 0 ||
+            _lastStampData.DocData == null || _lastStampData.PaperObject == null) return;
+        _paperReady = false;
+        _pendingPaper = true;
         _lastStampData = new StampData(approved, _lastStampData.DocData, _lastStampData.PaperObject, _lastStampData.PaperModel);
         _lastStampData.PaperObject.SetParent(null);
         _lastStampData.PaperModel.gameObject.layer = LayerMask.NameToLayer("Default");
@@ -192,23 +229,28 @@ public class QueueManager : MonoBehaviour
 
         PaperEvaluated?.Invoke(_lastStampData);
 
-        if(_npcInstances.Count == 0)
+        if (!_roundEnded && _npcInstances.Count == 0 && documents.Count > 0)
         {
             ResetTimer();
-
-            if (documents.Count == 0)
-            {
-                StartGameWin();
-            }
-            else
-            {
-                StartCoroutine(AddNpcToQueue(SpawnNPC()));
-            }
+            StartCoroutine(AddNpcToQueue(SpawnNPC()));
         }
+    }
+
+    void CloseRound()
+    {
+        _roundEnded = true;
+        _paperReady = false;
+        countdownTimer.StopTimer();
+        stampManager.EndRound();
+        ClearQueueListeners();
+        StopAllCoroutines();
+        doorAnimator.SetBool("IsOpen", false);
     }
 
     void StartGameWin()
     {
+        if (_roundEnded || _pendingPaper || stampManager.IsStamping) return;
+        CloseRound();
         NPC instance = Instantiate(gameWinNpc);
         instance.SetModel(npcVariants[Random.Range(0, npcVariants.Length)]);
 
@@ -222,22 +264,25 @@ public class QueueManager : MonoBehaviour
     [ContextMenu("Call Off NPCs")]
     public void CallOffNPCs()
     {
+        if (_roundEnded) return;
+        bool trashReadyPaper = _paperReady && _lastStampData.PaperObject != null;
+        CloseRound();
         hudFade.TriggerFadeOut();
         bomb.Throw(bombThrowVelocity);
 
         _walkOut = true;
         documents.Clear();
-        if(_npcInstances.Count != 0)
+        if (trashReadyPaper)
         {
-            NPC deskNPC = _npcInstances[0];
-            StampData stampData = new StampData(false, deskNPC.DocData, deskNPC.PaperObject, deskNPC.PaperModel.transform);
-            stampManager.TrashPaper(stampData);
-            stampData.PaperModel.gameObject.layer = LayerMask.NameToLayer("Default");
-
-            GoToExit(deskNPC);
+            _lastStampData.PaperModel.gameObject.layer = LayerMask.NameToLayer("Default");
+            stampManager.TrashPaper(_lastStampData);
+        }
+        foreach (var npc in _npcInstances.ToArray())
+        {
+            if (npc != null) GoToExit(npc);
         }
         NPC instance = Instantiate(gameOverNpc);
-        instance.transform.position = npcFollowData.path.startGS;
+        InitNPC(instance);
         StartCoroutine(AddNpcToQueue(instance));
     }
 
@@ -253,12 +298,12 @@ public class QueueManager : MonoBehaviour
             backFollow.RemoveSubscriptions();
             Destroy(instance.gameObject);
         };
-        if(_npcInstances.Count > 0)
-            _npcInstances.RemoveAt(0);
+        _npcInstances.Remove(instance);
     }
 
     private void Update()
     {
+        if (_roundEnded) return;
         if (throwBomb)
         {
             throwBomb = false;

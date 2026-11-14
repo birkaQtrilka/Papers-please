@@ -571,6 +571,7 @@ RectTransform:
   - {fileID: 280102102}
   - {fileID: 1344437913}
   - {fileID: 1019840937}
+  - {fileID: 235816071}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -950,6 +951,94 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1959556861}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &235816070
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 235816071}
+  - component: {fileID: 235816074}
+  - component: {fileID: 235816073}
+  - component: {fileID: 235816072}
+  m_Layer: 5
+  m_Name: Vignete
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &235816071
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 235816070}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 86291076}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!225 &235816072
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 235816070}
+  m_Enabled: 0
+  m_Alpha: 0
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!114 &235816073
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 235816070}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 0}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &235816074
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 235816070}
+  m_CullTransparentMesh: 1
 --- !u!1 &244221710
 GameObject:
   m_ObjectHideFlags: 0
@@ -2487,6 +2576,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3df30d5e81b808241b17d06ca6cf1f5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  useSolidOverlay: 1
+  overlayImage: {fileID: 0}
+  overlayInnerRadius: 0.4
   uiCanvasGroup: {fileID: 574001640}
   globalVolume: {fileID: 0}
   fadeOnStart: 0
@@ -3614,6 +3706,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3df30d5e81b808241b17d06ca6cf1f5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  useSolidOverlay: 1
+  overlayImage: {fileID: 235816073}
+  overlayInnerRadius: 0
   uiCanvasGroup: {fileID: 1019840938}
   globalVolume: {fileID: 832575518}
   fadeOnStart: 1
@@ -3828,6 +3923,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 10158d51a0f786c45af6d938e190d4ae, type: 2}
   - {fileID: 11400000, guid: c6286b4c4e3fb0c43b26d41266e6b854, type: 2}
   - {fileID: 11400000, guid: bed081f2693a7a0409c5143ceb5b8952, type: 2}
+  - {fileID: 11400000, guid: 57bfec8fa3fdd1941be5bf00a15d67cd, type: 2}
+  - {fileID: 11400000, guid: 56a6f326ffda6b040bff7d851827d4c9, type: 2}
   - {fileID: 11400000, guid: dbcad47eb3a39e34ab871e0165f927d1, type: 2}
   npcPrefab: {fileID: 2666858608353070615, guid: ed733cc3223f5e2409642ef70641e87e, type: 3}
   gameOverNpc: {fileID: 2442913179148284069, guid: 36360a255ce9a0c4db56a9c56e893a7f, type: 3}
@@ -6944,6 +7041,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1959556861}
   - component: {fileID: 1959556860}
+  - component: {fileID: 1959556862}
   m_Layer: 0
   m_Name: PaperStampManager
   m_TagString: Untagged
@@ -7120,6 +7218,9 @@ MonoBehaviour:
   wrongAS: {fileID: 1021713592}
   correctAS: {fileID: 463937230}
   Score: 200
+  _specialPaperEffects: {fileID: 1959556862}
+  _correctPoints: 100
+  _wrongPoints: -50
 --- !u!4 &1959556861
 Transform:
   m_ObjectHideFlags: 0
@@ -7143,6 +7244,19 @@ Transform:
   - {fileID: 1244535867}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1959556862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1959556858}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32fb7e98d87e210469c613408adca80d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpecialPaperEffectController
+  _countdownTimer: {fileID: 10886014}
 --- !u!1 &1960235417
 GameObject:
   m_ObjectHideFlags: 0

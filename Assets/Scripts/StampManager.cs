@@ -47,7 +47,21 @@ public class StampManager : MonoBehaviour
     [SerializeField] AudioSource correctAS;
 
     public int Score = 0;
-    
+
+    [Header("Special Papers")]
+    [SerializeField] private SpecialPaperEffectController _specialPaperEffects;
+    [SerializeField] private int _correctPoints = 100;
+    [SerializeField] private int _wrongPoints = -50;
+    private bool _roundEnded;
+    public bool IsStamping { get; private set; }
+    public bool RoundEnded => _roundEnded;
+
+    public void EndRound()
+    {
+        if (_roundEnded) return;
+        _roundEnded = true;
+        if (_specialPaperEffects != null) _specialPaperEffects.EndRound();
+    }
 
     GameObject _lastPaper;
     private void Start()
@@ -67,6 +81,9 @@ public class StampManager : MonoBehaviour
 
     public void StampPaper(StampData stampData)
     {
+        if (_roundEnded || IsStamping || stampData.DocData == null || stampData.PaperObject == null) return;
+        IsStamping = true;
+        DeactivateApproveColliders(stampData.PaperObject);
         stampData.PaperObject.SetParent(null);
         paperFollowData.path = watchToDeskPath;
         CurveFollower paperPutFollower = new (paperFollowData, stampData.PaperObject);
@@ -74,16 +91,17 @@ public class StampManager : MonoBehaviour
 
         paperPutFollower.OnFinishedWalking += () => {
             StartCoroutine(
-                MoveStamperAnimation(stampData.Approved, stampData.DocData.shouldApprove, stampData.PaperObject)
+                MoveStamperAnimation(stampData)
             );
 
             paperPutFollower.RemoveSubscriptions();
         };
     }
 
-    IEnumerator MoveStamperAnimation(bool approved, bool shouldApprove, Transform docObject)
+    IEnumerator MoveStamperAnimation(StampData stampData)
     {
-        DeactivateApproveColliders(docObject);
+        bool approved = stampData.Approved;
+        Transform docObject = stampData.PaperObject;
 
         paperFollowData.path = stampToPaperPath;
         CurveFollower paperDeskFollower = new (paperFollowData, stamper.transform);
@@ -102,21 +120,7 @@ public class StampManager : MonoBehaviour
         yield return StartCoroutine(stampFollower.WalkLoop(stampPaperPosition, stampTime));
 
 
-        if (!(shouldApprove ^ approved))
-        {
-            correctAS.Play();
-            Score += 100;
-            scoreUI.PositiveEffect();
-            fadeEffector.StartCoroutine(fadeEffector. FadeOutInCoroutine(Color.green, fadeTime, null, fadeVignete, fadeUI, fadeCurve));
-        }
-        else
-        {
-            wrongAS.Play();
-            Score -= 50;
-            scoreUI.NegativeEffect();
-            fadeEffector.StartCoroutine(fadeEffector.FadeOutInCoroutine(Color.red, fadeTime, null, fadeVignete, fadeUI, fadeCurve));
-        }
-
+        ResolvePaper(stampData);
         scoreUI.UpdateScore(Score);
         var inkRenderer = stampPaperPosition.Find("Stamp");
         inkRenderer.gameObject.SetActive(true);
@@ -137,7 +141,41 @@ public class StampManager : MonoBehaviour
         }
         DestroyLastPaper(docObject.gameObject);
 
-        StampFinished.Invoke();
+        IsStamping = false;
+        StampFinished?.Invoke();
+    }
+
+    private void ResolvePaper(StampData stampData)
+    {
+        if (_roundEnded || stampData.DocData == null) return;
+        if (stampData.DocData.IsSpecial)
+        {
+            if (stampData.Approved)
+            {
+                if (_specialPaperEffects != null) _specialPaperEffects.Accept(stampData.DocData);
+                else Debug.LogWarning("Special paper skipped: no effect controller assigned.", this);
+            }
+            return;
+        }
+
+        bool correct = stampData.Approved == stampData.DocData.shouldApprove;
+        int points = correct ? _correctPoints : _wrongPoints;
+        if (_specialPaperEffects != null) points = _specialPaperEffects.ResolveNormalPaper(correct, points);
+        int previousScore = Score;
+        Score = SpecialPaperEffectController.ClampScore((double)Score + points);
+        if (correct)
+        {
+            correctAS.Play();
+            scoreUI.PositiveEffect();
+            fadeEffector.StartCoroutine(fadeEffector.FadeOutInCoroutine(Color.green, fadeTime, null, fadeVignete, fadeUI, fadeCurve));
+        }
+        else
+        {
+            wrongAS.Play();
+            scoreUI.NegativeEffect();
+            fadeEffector.StartCoroutine(fadeEffector.FadeOutInCoroutine(Color.red, fadeTime, null, fadeVignete, fadeUI, fadeCurve));
+        }
+        if (Score != previousScore) ScoreChanged?.Invoke();
     }
 
     void DestroyLastPaper(GameObject newPaper)

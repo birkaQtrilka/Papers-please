@@ -29,19 +29,56 @@ public class CountdownTimer : MonoBehaviour
     private int lastWholeSecond;
     private int baseFontSize;
     private Coroutine pulseCoroutine;
+    private bool hasStarted;
+    private bool completionDispatched;
+
+    public float RemainingTime => timeRemaining;
+    public bool IsRunning => isRunning;
 
     private void Start()
     {
         baseFontSize = Mathf.RoundToInt(timerText.fontSize);
-        StartTimer(duration);
+        if (!hasStarted) StartTimer(duration);
     }
 
     public void StartTimer(float seconds)
     {
-        timeRemaining = seconds;
+        if (float.IsNaN(seconds) || float.IsInfinity(seconds)) return;
+        hasStarted = true;
+        completionDispatched = false;
+        timeRemaining = Mathf.Max(0f, seconds);
         lastWholeSecond = Mathf.CeilToInt(timeRemaining);
         isRunning = true;
         UpdateDisplay();
+        if (timeRemaining <= 0f) CompleteTimer();
+    }
+
+    public bool ScaleRemainingTime(float factor)
+    {
+        if (!isRunning || float.IsNaN(factor) || float.IsInfinity(factor) || factor <= 0f || factor > 1f)
+            return false;
+        timeRemaining = Mathf.Max(0f, timeRemaining * factor);
+        lastWholeSecond = Mathf.CeilToInt(timeRemaining);
+        UpdateDisplay();
+        if (timeRemaining <= 0f) CompleteTimer();
+        return true;
+    }
+
+    public void StopTimer()
+    {
+        hasStarted = true;
+        isRunning = false;
+    }
+
+    private void CompleteTimer()
+    {
+        if (completionDispatched) return;
+        timeRemaining = 0f;
+        isRunning = false;
+        completionDispatched = true;
+        UpdateDisplay();
+        OnTimerComplete();
+        StartCoroutine(SpamPulse());
     }
 
     private void Update()
@@ -53,12 +90,7 @@ public class CountdownTimer : MonoBehaviour
 
         if (timeRemaining <= 0f)
         {
-            timeRemaining = 0f;
-            isRunning = false;
-            UpdateDisplay();
-            OnTimerComplete();
-            StartCoroutine(SpamPulse());
-
+            CompleteTimer();
             return;
         }
 
