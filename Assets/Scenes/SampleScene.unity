@@ -314,7 +314,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   timerText: {fileID: 10886012}
-  duration: 600
+  duration: 500
   colorCurve:
     serializedVersion: 2
     m_Curve:
@@ -3914,17 +3914,18 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e44e3012d9556314ca8b3c26e2ac5369, type: 2}
   - {fileID: 11400000, guid: c973d4cd7fb04264487683866082e80b, type: 2}
   - {fileID: 11400000, guid: 69e96f30d37bd864eb2189ef011b67a0, type: 2}
+  - {fileID: 11400000, guid: 56a6f326ffda6b040bff7d851827d4c9, type: 2}
   - {fileID: 11400000, guid: d8fe9763d396680458579ccccdc50047, type: 2}
   - {fileID: 11400000, guid: 7bd7597f3bc568346a16970f70891a8f, type: 2}
   - {fileID: 11400000, guid: 7cef34d6a1794354fba775273244149f, type: 2}
   - {fileID: 11400000, guid: a4451bed99c68ba48aa0d002e2da3a51, type: 2}
+  - {fileID: 11400000, guid: 56a6f326ffda6b040bff7d851827d4c9, type: 2}
   - {fileID: 11400000, guid: ccd8c90e8ae584d41b761dbe61b2effb, type: 2}
   - {fileID: 11400000, guid: 6ccbab5050dbdd54999719f647322647, type: 2}
   - {fileID: 11400000, guid: 10158d51a0f786c45af6d938e190d4ae, type: 2}
   - {fileID: 11400000, guid: c6286b4c4e3fb0c43b26d41266e6b854, type: 2}
-  - {fileID: 11400000, guid: bed081f2693a7a0409c5143ceb5b8952, type: 2}
   - {fileID: 11400000, guid: 57bfec8fa3fdd1941be5bf00a15d67cd, type: 2}
-  - {fileID: 11400000, guid: 56a6f326ffda6b040bff7d851827d4c9, type: 2}
+  - {fileID: 11400000, guid: bed081f2693a7a0409c5143ceb5b8952, type: 2}
   - {fileID: 11400000, guid: dbcad47eb3a39e34ab871e0165f927d1, type: 2}
   npcPrefab: {fileID: 2666858608353070615, guid: ed733cc3223f5e2409642ef70641e87e, type: 3}
   gameOverNpc: {fileID: 2442913179148284069, guid: 36360a255ce9a0c4db56a9c56e893a7f, type: 3}
