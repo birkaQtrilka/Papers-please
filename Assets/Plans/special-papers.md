@@ -146,3 +146,106 @@ Keep checks proportionate; stop after requested behaviors and essential regressi
 - Pause remains pause: accepting a time cut cannot restart or unpause the timer. Restart restores fresh effect state.
 - Existing StampTest normal-paper flow still works without the new controller.
 - Compile without new errors; confirm references/event wiring and readable printed terms at the existing rendering resolution. No new player-only Editor dependencies or package/define changes. A full WebGL build is only necessary if focused checks expose a platform-specific concern.
+
+---
+
+# Paper Menus — Current Requested Extension
+This extension is the implementation scope for the current request. Earlier special-paper work is context only: do not reimplement it. The earlier instruction to preserve pause UI/StartMenu is superseded only for the menu changes specified below. Preserve all gameplay document artwork and dynamic special-paper presentation.
+
+# Project Overview
+- **Game Title:** Papers please.
+- **High-Level Concept:** Give the start menu and in-game pause menu coordinated physical office-form papers. Pause offers a separate options page with master-volume controls, retaining the desk-based presentation rather than a conventional flat menu.
+- **Players:** Existing single player.
+- **Inspiration / Reference Games:** Existing Papers, Please-style office and the project's `PopParent` start-menu paper.
+- **Tone / Art Direction:** User selected **official office forms**: warm ivory, dark ink, ruled borders, subtle wear, muted red/green stamp accents. Decorative artwork stays separate from editable text.
+- **Target Platform:** Existing WebGL, Unity 6000.6.0f1. No packages, compatibility guards or scripting defines changed.
+- **Screen Orientation / Resolution:** Preserve landscape presentation, existing Canvas scaling and 960×600 Web player defaults. Check paper readability at that size and 1920×1080.
+- **Render Pipeline:** Existing URP / PC_RPAsset; no global rendering changes.
+
+# Game Mechanics
+## Core Gameplay Loop
+No scoring, stamping, queue, timer-duration or special-effect changes. Escape suspends gameplay and displays a physical pause paper. Resume returns to the exact suspended state; Options replaces the page content without unpausing; Back returns to the pause page. Reopening pause starts on its main page.
+
+## Controls and Input Methods
+- User selected **entirely physical controls**, not a draggable slider: collider buttons, hover outlines and editable mesh text matching `PopParent`. Volume uses minus/plus buttons and a percentage, in 10-percentage-point steps clamped to 0–100%.
+- Project Settings verified `activeInputHandler=2` (Both). The existing EventSystem uses InputSystemUIInputModule; existing SelectManager and PauseManager use legacy polling. Implement changed menu controls with `UnityEngine.InputSystem` event-driven InputActions, without migrating gameplay input.
+- Escape preserves its existing toggle behavior: Resume from either pause page. Mouse clicks select the physical button under the displayed render-texture pointer location.
+- Preserve current Start and Quit actions. Quit keeps the existing application-exit behavior; WebGL generally cannot close a browser tab, so do not claim that it will. No new return-to-title or restart feature.
+- Master volume changes apply through `AudioListener.volume`, preserving all per-source balances. No mixers exist, so no mixer creation/routing overhaul is needed. Volume remains set across pause/resume and scene transitions in the current session; disk/browser persistence is outside this request.
+
+# UI
+## Confirmed direction and alternatives
+The selected physical −/+ controls maximize consistency with the desk/document aesthetic (MDA) and give explicit percentage feedback supporting competence (SDT). A physical-paper slider would allow finer, faster adjustments but adds pointer-drag mapping complexity; a paper-styled Canvas would be simpler but less faithful to PopParent. User explicitly chose the all-physical design and office-form artwork.
+
+## Paper mockups
+```text
+START PAPER                    PAUSE PAPER
+┌────────────────────────┐     ┌────────────────────────┐
+│ OFFICE OF DOCUMENTS    │     │ OFFICE OF DOCUMENTS    │
+│ ────────────────────── │     │ ────────────────────── │
+│     PAPERS PLEASE      │     │     SHIFT PAUSED       │
+│                        │     │                        │
+│       [ START ]        │     │      [ RESUME ]        │
+│       [ QUIT  ]        │     │      [ OPTIONS ]       │
+│                        │     │      [ QUIT ]          │
+│  small stamp / form ID │     │  small stamp / form ID │
+└────────────────────────┘     └────────────────────────┘
+
+OPTIONS PAGE (same pause paper)
+┌────────────────────────┐
+│ OFFICE OF DOCUMENTS    │
+│ ────────────────────── │
+│      AUDIO OPTIONS     │
+│                        │
+│     MASTER VOLUME      │
+│    [ − ]  80%  [ + ]   │
+│                        │
+│        [ BACK ]        │
+│  small stamp / form ID │
+└────────────────────────┘
+```
+- Produce coordinated decorative background PNGs for StartMenu and PauseMenu: lightly textured ivory, double-rule border, header/footer rules and restrained stamp ornamentation. Do not bake button labels, titles or the changing volume percentage into the texture. Use hand-authored/procedural 2D artwork; no external asset-generation service is required.
+- Keep generous blank text areas, strong ink contrast and useful click sizes. Artwork must not obscure the existing title and action labels. The options page reuses the pause-paper background.
+- Keep the existing PopParent paper geometry and dynamic mesh-text style; add pause content as a separate prefab. Do not edit shared GameOverPaper or PaperBack material in place, as these affect result documents.
+- Freeze gameplay without freezing menu input. The existing pause configuration disables Main Camera, HUD and PaperApproveManager, so the pause paper needs its own rendering path. Use an isolated menu-only camera/render texture shown by a non-raycast RawImage above the existing scene image on the existing Canvas. This displays real 3D paper/colliders, not flat Canvas buttons. No additional EventSystem.
+
+# Key Asset & Context
+## Verified existing context
+- `Assets/Prefabs/PopParent.prefab`: only StartMenu directly depends on it. Contains nested GameOverPaper/Model front and back quads, mesh TextMeshPro title/action text, Start/Quit BoxColliders and first-child Selection highlights. Action colliders use DocumentClick layer 6; Pop layer 8 is also used by its root in StartMenu overrides.
+- `Assets/Scripts/StartMenuManager.cs`: subscribes to SelectManager.OnFieldClick, dispatches by collider name `Start`/`Quit`; Start fades then loads build scene index 1. Preserve names and event signatures.
+- `Assets/Scripts/SelectManager.cs`: render-camera/renderImageRect pointer mapping, hover events and click events. Two instances are serialized in StartMenu for action selection and pop hover. Its hover logic assumes a first child exists. Preserve existing pop wiring and enable/disable timing.
+- `Assets/Scripts/PauseManager.cs`: pausePanel, resumeButton, quitButton and SceneTransitionManager are actually assigned in SampleScene. Pause hides HUD, Main Camera and PaperApproveManager, sets timeScale=0 and pauses sources; Resume currently indiscriminately re-enables objects.
+- `Assets/Scenes/SampleScene.unity`: existing PausePanel contains Container/Btns/Btn_Resune and Btn_Quit. Existing Canvas, one EventSystem and Pixelated/NonPixelated render-texture images are present.
+- `Assets/Scripts/PlayerCamera.cs`: uses LateUpdate pointer motion even with timeScale=0; disabling gameplay camera/controller must be preserved. Cache and restore cursor state for the clickable pause menu.
+- `Assets/Scripts/SceneTransitionManager.cs`: fade routines use scaled time. Preserve existing quit path that restores time before fading; avoid global fade-timing changes.
+- AudioSources use individual volume settings; no AudioMixer assets or existing volume-setting code found.
+- Dependencies were inspected through read-only AssetDatabase queries (no dedicated dependency tool exposed). PauseManager affects SampleScene; SelectManager affects StartMenu; GameOverPaper affects PopParent and both NPC result prefabs. Recheck modified assets before edits.
+
+## Planned assets
+- Modify `Assets/Prefabs/PopParent.prefab`: assign start-specific front artwork material and align its dynamic text/highlights to the official-form design. Preserve nested prefab identity and existing actions.
+- Create `Assets/Prefabs/PausePaper.prefab`: reuse the existing physical-paper model pattern with MainPage (Resume, Options, Quit) and OptionsPage (VolumeDown, VolumeUp, Back, dynamic percentage). All hit targets have first-child Selection highlights; decorative geometry has no interactive collider.
+- Create `Assets/Images/Documents/MenuPapers/StartMenu_Background.png` and `PauseMenu_Background.png`.
+- Create dedicated materials under `Assets/Materials/MenuPapers/` for the two paper fronts and, only if necessary, menu-specific highlight styling. Never recolor shared Green.mat or PaperBack.mat globally.
+- Create `Assets/Textures/PauseMenu.renderTexture` for the isolated menu-camera output; determine its dimensions from the existing presentation during implementation, keeping aspect and readable resolution.
+- Modify `Assets/Scripts/PauseManager.cs`: physical selection references, page switching, event-driven pause action, master-volume operations and precise state restoration. Keep public Pause(), Resume(), static IsPaused and QuitApplication() contracts. Remove obsolete flat-menu button subscriptions only after rewiring.
+- Modify `Assets/Scripts/SelectManager.cs` narrowly: InputAction-based click/pointer handling, safe bounded render-image mapping, optional-child protection, selection reset when disabled/page changes. Preserve public UnityEvent contracts and both StartMenu use cases.
+- Modify `Assets/Scenes/SampleScene.unity`: connect pause prefab, isolated camera, Canvas RawImage and selector; retire the old PausePanel presentation without rebuilding the rest of the Canvas. Keep obsolete objects inactive until references are verified, then remove only unused pause-specific elements if safe.
+- Modify `Assets/Scenes/StartMenu.unity` only for presentation overrides needed by the new artwork; preserve existing PopEffect, start action and transition wiring. StartMenuManager logic need not change unless a discovered hookup requires a minimal correction.
+
+# Implementation Steps
+1. **Confirm edit-time wiring and isolate impact.** Recheck dependencies for modified assets, inspect StartMenu's live prefab overrides, cameras, CanvasScaler and selector enable timing, and identify all references to old pause elements. Record existing render and cursor states. **Dependencies:** approved extension; exploration findings above.
+2. **Author coordinated paper backgrounds/materials.** Create the two decorative PNGs and front materials, with dynamic-text safe areas and office-form accents. Apply start material as a PopParent-specific override; leave shared result-paper sources untouched. Verify start-paper appearance before proceeding. **Dependencies:** Step 1.
+3. **Build the pause paper incrementally.** Create PausePaper using the existing paper model layout, add the three main-page collider buttons and separate volume/back page, mesh text and selection highlights. MainPage and OptionsPage must be mutually exclusive. Assign dedicated pause material; no unnecessary animated effects. **Dependencies:** Steps 1–2.
+4. **Make physical menu selection pause-safe.** Update SelectManager to use enabled/disposed InputActions with click callbacks, pointer-position action and existing hover events. Map pointer through the supplied RawImage rect, reject outside clicks, respect its UV rect and camera output, and clear stale highlights on page/enable changes. Preserve both existing StartMenu selectors' behavior; no gameplay input migration. **Dependencies:** Steps 1 and 3.
+5. **Integrate pause state and volume.** Update PauseManager with serialized selector/page/percentage references and explicit handlers for Resume, Options, Quit, VolumeDown, VolumeUp and Back. Enable Escape action through lifecycle subscriptions; guard duplicate pause/resume. Cache prior timeScale, active states and cursor state; restore them instead of blindly reactivating objects. Keep source pause/unpause behavior, do not unpause unrelated already-paused sources, and handle runtime-spawned scene sources as needed for the existing game. Master volume clamps at endpoints and changes only AudioListener.volume; update percentage immediately. Reset static pause state safely on teardown. Quit restores time before the current transition and exit. **Dependencies:** Steps 3–4.
+6. **Wire rendering and retire the flat pause panel.** Add an isolated menu camera/output with only pause-paper objects on its culling path (reuse Pop layer 8 for isolated pause objects where safe). Place camera/paper away from gameplay and avoid rendering game colliders. Enable camera, selector and overlay image only while paused. Ensure gameplay image/camera rendering remains unchanged on Resume and no second active AudioListener is introduced. Assign physical actions and disable old Canvas buttons after successful migration. **Dependencies:** Steps 3–5.
+7. **Focused verification, save and cleanup.** Run the checks below; fix only task-related regressions, remove temporary tooling and save intended prefabs/assets/scenes. Stop after essential requested behavior works. **Dependencies:** Steps 2–6.
+
+# Verification & Testing
+- Compile without new errors; verify assigned references, click layers, exactly one EventSystem and no extra active AudioListener.
+- StartMenu: paper artwork is visible, text stays dynamic/readable, Start still loads gameplay with its fade, Quit retains its existing platform behavior, and pop/hover selectors still behave correctly.
+- Pause: Escape displays paper with timeScale=0; no camera movement, document selection or timer advancement occurs. Physical Resume/Options/Quit buttons remain responsive despite paused time and disabled Main Camera.
+- Options: Options shows only the volume/back page; Back shows only main page. −/+ changes percentage and master gain in 10% steps, clamps at 0/100%, and leaves per-source volume settings unchanged. After Resume, audible gameplay uses the selected master gain. Reopening pause starts at main page with the same session volume.
+- Resume and Escape from either page restore prior active-object, cursor and time states; already-inactive objects remain inactive. No stale highlights, double listeners, double clicks or hidden-page hit targets.
+- Display: check 960×600 and 1920×1080, pointer alignment near buttons and image edges, no z-fighting/clipping, no UI blocker or scene object obscuring the paper. Result/special document textures and scoring flow remain untouched.
+- Quit fade does not stall at timeScale=0. WebGL tab closing is not asserted or tested as supported. A full build is unnecessary unless a platform-specific issue emerges during these focused checks.
