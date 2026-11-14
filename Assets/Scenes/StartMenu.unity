@@ -1419,6 +1419,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  transitionColor: {r: 0.06666667, g: 0.06666667, b: 0.06666667, a: 1}
   OnEnd:
     m_PersistentCalls:
       m_Calls:

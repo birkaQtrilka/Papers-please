@@ -16,6 +16,7 @@ public class SceneTransitionManager : MonoBehaviour
     [Tooltip("The Global Volume that contains a Vignette override.")]
     public Volume globalVolume;
     public bool fadeOnStart = true;
+
     [Header("Timing")]
     [Tooltip("How long the fade-out phase takes (seconds).")]
     public float fadeOutDuration = 0.5f;
@@ -34,6 +35,10 @@ public class SceneTransitionManager : MonoBehaviour
     [Tooltip("Easing curve applied to both the UI and vignette fades.")]
     public AnimationCurve fadeCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
+    [Header("Color")]
+    [Tooltip("Default color used for the vignette and the UI image during transitions.")]
+    public Color transitionColor = Color.black;
+
     private Vignette _vignette;
     private bool _isTransitioning = false;
 
@@ -47,6 +52,12 @@ public class SceneTransitionManager : MonoBehaviour
 
             if (globalVolume.profile.TryGet(out _vignette))
             {
+                // Make sure our values actually get applied by the volume system
+                _vignette.intensity.overrideState = true;
+                _vignette.color.overrideState = true;
+                _vignette.center.overrideState = true;
+                _vignette.rounded.overrideState = true;
+
                 _vignette.intensity.value = 0f;
             }
         }
@@ -55,19 +66,21 @@ public class SceneTransitionManager : MonoBehaviour
     }
 
 
-    public void FadeOut(System.Action onMidpoint = null)
+    public void FadeOut(System.Action onMidpoint = null, Color? color = null)
     {
         if (_isTransitioning) StopAllCoroutines();
-        StartCoroutine(FadeOutRoutine(onMidpoint));
-    }   
-    public void FadeIn(System.Action onMidpoint = null)
+        StartCoroutine(FadeOutRoutine(onMidpoint, color));
+    }
+
+    public void FadeIn(System.Action onMidpoint = null, Color? color = null)
     {
         if (_isTransitioning) StopAllCoroutines();
-        StartCoroutine(FadeInRoutine(onMidpoint));
+        StartCoroutine(FadeInRoutine(onMidpoint, color));
     }
 
 
-    public IEnumerator FadeOutInCoroutine(Color color, float duration, Action onEnd, float vigneteIntensity = .5f, float uiIntensity = .2f, AnimationCurve curve = null)
+    // color is now optional; falls back to transitionColor when null
+    public IEnumerator FadeOutInCoroutine(Color? color, float duration, Action onEnd, float vigneteIntensity = .5f, float uiIntensity = .2f, AnimationCurve curve = null)
     {
         _isTransitioning = true;
 
@@ -86,28 +99,29 @@ public class SceneTransitionManager : MonoBehaviour
             uiEnd: 0,
             vignetteStart: vigneteIntensity,
             vignetteEnd: 0f,
-            duration: duration/2,
+            duration: duration / 2,
             color: color,
             curve: curve
         ));
 
-        onEnd?.Invoke();    
+        onEnd?.Invoke();
         _isTransitioning = false;
     }
 
+    // UnityEvent-friendly (no Color? parameter), uses the inspector color
     public void TriggerFadeOut() => FadeOut();
 
-    private IEnumerator FadeOutRoutine(System.Action onMidpoint)
+    private IEnumerator FadeOutRoutine(System.Action onMidpoint, Color? color)
     {
         _isTransitioning = true;
-
 
         yield return StartCoroutine(FadePhase(
             uiStart: 1,
             uiEnd: 0,
             vignetteStart: vignetteMaxIntensity,
             vignetteEnd: 0f,
-            duration: fadeOutDuration
+            duration: fadeOutDuration,
+            color: color
         ));
         onMidpoint?.Invoke();
 
@@ -116,17 +130,17 @@ public class SceneTransitionManager : MonoBehaviour
 
     public void TriggerFadeIn() => FadeIn();
 
-    private IEnumerator FadeInRoutine(System.Action onMidpoint)
+    private IEnumerator FadeInRoutine(System.Action onMidpoint, Color? color)
     {
         _isTransitioning = true;
-
 
         yield return StartCoroutine(FadePhase(
             uiStart: 0,
             uiEnd: 1,
             vignetteStart: 0f,
             vignetteEnd: vignetteMaxIntensity,
-            duration: fadeInDuration
+            duration: fadeInDuration,
+            color: color
         ));
         onMidpoint?.Invoke();
         _isTransitioning = false;
@@ -137,19 +151,20 @@ public class SceneTransitionManager : MonoBehaviour
         float vignetteStart, float vignetteEnd,
         float duration, Color? color = null, AnimationCurve curve = null)
     {
+        Color activeColor = color ?? transitionColor;
         float elapsed = 0f;
+
         if (_vignette != null)
         {
-            _vignette.center.value = new Vector2(0.5f, 0.5f); // Ensure vignette is centered
+            _vignette.center.value = new Vector2(0.5f, 0.5f);
             _vignette.intensity.value = vignetteStart;
-            _vignette.color.value = color ?? Color.black;
+            _vignette.color.value = activeColor;
             _vignette.rounded.value = true;
-
         }
 
-        if(uiCanvasGroup != null && uiCanvasGroup.TryGetComponent<Image>(out Image img))
+        if (uiCanvasGroup != null && uiCanvasGroup.TryGetComponent<Image>(out Image img))
         {
-            img.color = color ?? Color.black;
+            img.color = activeColor;
         }
 
         while (elapsed < duration)
@@ -167,7 +182,6 @@ public class SceneTransitionManager : MonoBehaviour
         // Snap to exact target values.
         SetCanvasAlpha(uiEnd);
         SetVignetteIntensity(vignetteEnd);
-
     }
 
 
